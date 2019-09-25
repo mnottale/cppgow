@@ -10,9 +10,11 @@ The API is very simple:
 
 ### Client
 
-```
+```C
+
 void onResult(void*, int statusCode, void* payload, int payloadLength) {
-    write(0, payload, payloadLength);
+    write(1, payload, payloadLength);
+    exit(statusCode == 200 ? 0 : 1);
 }
 
 int main() {
