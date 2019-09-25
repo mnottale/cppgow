@@ -7,6 +7,8 @@ struct CRequest
   char* url;
   char* method;
   char* headers;
+  void* payload;
+  int   payloadLength;
   RequestCallback onResult;
   void* userData;
 };

@@ -26,6 +26,8 @@ int main(int argc, char** argv)
   req.headers = 0;
   req.userData = 0;
   req.onResult = &onResult;
+  req.payload = 0;
+  req.payloadLength = 0;
   cppgowRequest(&req);
   usleep(100000000);
   printf("TIMEOUT");

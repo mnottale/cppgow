@@ -7,6 +7,8 @@ package main
 // #include "cppgowc.h"
 import "C"
 import "unsafe"
+import "bytes"
+import "io"
 import "io/ioutil"
 import "net/http"
 import "strings"
@@ -32,7 +34,12 @@ func bounceErr(request *C.struct_CRequest, err error) {
 }
 
 func syncRequest(request *C.struct_CRequest) {
-  req, err := http.NewRequest(C.GoString(request.method), C.GoString(request.url), nil)
+  var payload io.Reader = nil
+  if request.payload != nil {
+    data := C.GoBytes(request.payload, request.payloadLength)
+      payload = bytes.NewBuffer(data)
+  }
+  req, err := http.NewRequest(C.GoString(request.method), C.GoString(request.url), payload)
   if err != nil {
     bounceErr(request, err)
     return
@@ -51,6 +58,7 @@ func syncRequest(request *C.struct_CRequest) {
     return
   }
   body, err := ioutil.ReadAll(resp.Body)
+  resp.Body.Close()
   if err != nil {
     bounceErr(request, err)
     return
