@@ -14,3 +14,31 @@ struct CRequest
 };
 
 void invokeRequestCallback(RequestCallback rc, struct CRequest* req, int code, void* data, int len);
+
+
+
+
+struct CServerRequest
+{
+  char* url;
+  char* method;
+  char* headers;
+  char* host;
+  char* client; // ip:port
+  void* payload;
+  int   payloadLength;
+};
+
+struct CServerResponse
+{
+  char* headers;
+  int   statusCode;
+  void* payload;
+  int   payloadLength;
+};
+
+// The server will free payload and headers and response upon copy
+typedef struct CServerResponse* (*ServerCallback)(struct CServerRequest*);
+
+
+struct CServerResponse* invokeServerCallback(ServerCallback sc, struct CServerRequest*);

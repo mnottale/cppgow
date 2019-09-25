@@ -67,5 +67,64 @@ func cppgowSyncRequest(request *C.struct_CRequest) {
   C.invokeRequestCallback(request.onResult, request, C.int(resp.StatusCode), unsafe.Pointer(&body[0]), C.int(len(body)));
 }
 
+//export cppgowRegisterHandler
+func cppgowRegisterHandler(route *C.char, handler C.ServerCallback) {
+  http.HandleFunc(C.GoString(route), func(w http.ResponseWriter, r *http.Request) {
+    creq := C.struct_CServerRequest {}
+      creq.url = C.CString(r.URL.String())
+      creq.method = C.CString(r.Method)
+      headers := ""
+      for k, v := range r.Header {
+        for _, vv := range v {
+          headers += k + ":" + vv + "\n"
+        }
+      }
+      creq.headers = C.CString(headers)
+      creq.host = C.CString(r.Host)
+      creq.client = C.CString(r.RemoteAddr)
+      body, err := ioutil.ReadAll(r.Body)
+      if err != nil {
+        return
+      }
+      creq.payload = C.CBytes(body) // we are forced to copy here...
+      creq.payloadLength = C.int(len(body))
+      csr := C.invokeServerCallback(handler, &creq)
+      if csr == nil {
+        w.WriteHeader(500)
+        return
+      }
+      hd := w.Header()
+      if csr.headers != nil {
+        hs := C.GoString(csr.headers)
+        hss := strings.Split(hs, "\n")
+          for _, kv := range hss {
+            kvs := strings.SplitN(kv, ":", 2)
+            hd.Add(kvs[0], kvs[1])
+          }
+      }
+      w.WriteHeader(int(csr.statusCode))
+      if csr.payload != nil {
+        w.Write(C.GoBytes(csr.payload, csr.payloadLength))
+      }
+      // cleanup
+      C.free(unsafe.Pointer(creq.url))
+      C.free(unsafe.Pointer(creq.method))
+      C.free(unsafe.Pointer(creq.headers))
+      C.free(unsafe.Pointer(creq.host))
+      C.free(unsafe.Pointer(creq.client))
+      C.free(unsafe.Pointer(creq.payload))
+      C.free(unsafe.Pointer(csr.headers))
+      C.free(unsafe.Pointer(csr.payload))
+      C.free(unsafe.Pointer(csr))
+  })
+}
+//export cppgowListenAndServe
+func cppgowListenAndServe(port *C.char) {
+  gport := C.GoString(port)
+  go func() {
+    http.ListenAndServe(gport, nil)
+  }()
+}
+
 func main() {
 }

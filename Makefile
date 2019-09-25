@@ -1,9 +1,12 @@
 
 
-all: get
+all: get testserver
 
 get: cppgow.so get.c
 	gcc -g -o get -I. get.c ./cppgow.so
+
+testserver: cppgow.so testserver.c
+	gcc -g -o testserver -I. testserver.c ./cppgow.so
 
 libcppgow_invoke.a: cppgow_invoke.c
 	gcc -g -c -o cppgow_invoke.o cppgow_invoke.c

@@ -4,3 +4,8 @@ void invokeRequestCallback(RequestCallback rc,struct CRequest* req, int code, vo
 {
   (rc)(req, code, data, len);
 }
+
+struct CServerResponse* invokeServerCallback(ServerCallback sc, struct CServerRequest* req)
+{
+  return sc(req);
+}
