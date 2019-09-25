@@ -22,7 +22,7 @@ func cppgowInitialize() {
   
 //export cppgowRequest
 func cppgowRequest(request *C.struct_CRequest) {
-  go syncRequest(request);
+  go cppgowSyncRequest(request);
 }
 
 func bounceErr(request *C.struct_CRequest, err error) {
@@ -33,7 +33,8 @@ func bounceErr(request *C.struct_CRequest, err error) {
   C.free(unsafe.Pointer(cs))
 }
 
-func syncRequest(request *C.struct_CRequest) {
+//export cppgowSyncRequest
+func cppgowSyncRequest(request *C.struct_CRequest) {
   var payload io.Reader = nil
   if request.payload != nil {
     data := C.GoBytes(request.payload, request.payloadLength)
