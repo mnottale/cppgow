@@ -109,3 +109,30 @@ The API does not support streaming (yet?), so all bodies must fit in memory.
 
 Since the heavy lifting is done by goroutines, your callbacks will be called
 from a random thread.
+
+
+## C++ Router
+
+cppgow now includes codegen to generate routers based on annotation.
+
+For instance:
+
+```C++
+//@route(/add/:a/:b)
+int add(int a, int b, int c)
+{ // c will be taken from query parameters
+    return a+b+c;
+}
+```
+
+Generate code with `./routegen.py mycppfile.cc > mycppfile_gen.cc`.
+
+Include the generated file in your sources, and call `router::listenAndServe(":portnumber")` from main().
+
+You can access the current request and response objects using `router::request()` and `router::response()`.
+
+Things you should know about it:
+
+  - The C++ *quote* parser *quote* is very fragile.
+  - Supported argument types are integral types, float, double and std::string.
+  - Your result value will be cast to a string using a stream.
