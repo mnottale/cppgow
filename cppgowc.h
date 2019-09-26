@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string.h>
 
 // request, status_code, body, bodyLength

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "cppgow.h"
 
 #include <unordered_map>
