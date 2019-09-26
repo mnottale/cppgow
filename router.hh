@@ -36,4 +36,8 @@ namespace router
     using Handler = std::function<cppgow::ServerResponse(cppgow::ServerRequest, std::vector<std::string>)>;
     void registerRoute(std::string const& prefix, std::string const& re, Handler handler);
     void listenAndServe(std::string const& hostPort);
+
+    cppgow::ServerRequest& request();
+    cppgow::ServerResponse& response();
+    void setResponse(cppgow::ServerResponse* ptr);
 }

@@ -5,6 +5,9 @@
 
 extern void router_register_routes();
 
+thread_local cppgow::ServerResponse* current_response;
+thread_local cppgow::ServerRequest* current_request;
+
 namespace router
 {
     struct Route
@@ -30,6 +33,7 @@ namespace router
                         hits.push_back(match[i]);
                     try
                     {
+                        current_request = (cppgow::ServerRequest*) &req;
                         return r.handler(req, hits);
                     }
                     catch (std::exception const& e)
@@ -56,5 +60,17 @@ namespace router
         router_register_routes();
         cppgow::registerRoute("/", processor);
         cppgow::listenAndServe(hostPort);
+    }
+    cppgow::ServerRequest& request()
+    {
+        return *current_request;
+    }
+    cppgow::ServerResponse& response()
+    {
+        return *current_response;
+    }
+    void setResponse(cppgow::ServerResponse* ptr)
+    {
+        current_response = ptr;
     }
 }

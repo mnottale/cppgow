@@ -38,6 +38,7 @@ def generate_route(route, rtype, fname, fargs):
     #print("REX " + route_regex)
     code = 'cppgow::ServerResponse serve_' + fname + '(cppgow::ServerRequest req, std::vector<std::string> rematch) {\n'
     code += '  cppgow::ServerResponse serverResponse;\n'
+    code += '  router::setResponse(&serverResponse);\n'
     code += '  serverResponse.statusCode = 200;\n'
     for a in range(len(route_args)):
         code += '  req.query["' + route_args[a] + '"] = rematch[' + str(a) + '];\n'
