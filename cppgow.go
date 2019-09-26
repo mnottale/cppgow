@@ -121,7 +121,11 @@ func cppgowRegisterHandler(route *C.char, handler C.ServerCallback, userData uns
             hss := strings.Split(hs, "\n")
             for _, kv := range hss {
                 kvs := strings.SplitN(kv, ":", 2)
-                hd.Add(kvs[0], kvs[1])
+                if len(kvs) == 2 {
+                  hd.Add(kvs[0], kvs[1])
+                } else {
+                  hd.Add(kvs[0], "")
+                }
             }
         }
       }
