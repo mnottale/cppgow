@@ -88,7 +88,7 @@ func cppgowSyncRequest(request *C.struct_CRequest) {
 }
 
 //export cppgowRegisterHandler
-func cppgowRegisterHandler(route *C.char, handler C.ServerCallback) {
+func cppgowRegisterHandler(route *C.char, handler C.ServerCallback, userData unsafe.Pointer) {
   http.HandleFunc(C.GoString(route), func(w http.ResponseWriter, r *http.Request) {
     creq := C.struct_CServerRequest {}
       creq.url = C.CString(r.URL.String())
@@ -108,6 +108,7 @@ func cppgowRegisterHandler(route *C.char, handler C.ServerCallback) {
       }
       creq.payload = C.CBytes(body) // we are forced to copy here...
       creq.payloadLength = C.int(len(body))
+      creq.userData = userData
       csr := C.invokeServerCallback(handler, &creq)
       if csr == nil {
         w.WriteHeader(500)
@@ -116,11 +117,13 @@ func cppgowRegisterHandler(route *C.char, handler C.ServerCallback) {
       hd := w.Header()
       if csr.headers != nil {
         hs := C.GoString(csr.headers)
-        hss := strings.Split(hs, "\n")
-          for _, kv := range hss {
-            kvs := strings.SplitN(kv, ":", 2)
-            hd.Add(kvs[0], kvs[1])
-          }
+        if hs != "" {
+            hss := strings.Split(hs, "\n")
+            for _, kv := range hss {
+                kvs := strings.SplitN(kv, ":", 2)
+                hd.Add(kvs[0], kvs[1])
+            }
+        }
       }
       w.WriteHeader(int(csr.statusCode))
       if csr.payload != nil {

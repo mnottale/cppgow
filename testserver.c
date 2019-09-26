@@ -20,7 +20,7 @@ struct CServerResponse* ping(struct CServerRequest* req) {
 
 int main(int argc, char** argv)
 {
-  cppgowRegisterHandler("/ping", ping);
+  cppgowRegisterHandler("/ping", ping, 0);
   cppgowListenAndServe(":8901");
   while(1)
     usleep(1000000);

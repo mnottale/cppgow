@@ -2,9 +2,9 @@
 
 ## What is it?
 
-An HTTP server and client with a C API, implemented by binding the go http module.
+An HTTP server and client with a C and C++ API, implemented by binding the go http module.
 
-## How to use it?
+## How to use it in C?
 
 The API is very simple:
 
@@ -28,6 +28,11 @@ int main() {
   sleep(10);
 }
 ```
+
+Notes:
+
+  - The CRequest object must be valid until the callback is invoked.
+  - The callback is invoked from a random thread
 
 ### Server
 
@@ -54,15 +59,53 @@ int main(int argc, char** argv)
 }
 ```
 
+Notes:
+
+  - The CResponse pointer and payload will be freed by cppgow upon completion.
+  - Your handler function will be called from a random thread
+
+## How to use it in C++?
+
+The API is even simpler:
+
+### Client
+
+```C++
+cppgow::get("http://www.google.com", [](int statusCode, void* payload, int payloadLength) {
+    if (statusCode != 200)
+      std::cerr << "google is down" << std::endl;
+});
+```
+
+### Server
+
+```C++
+#include <iostream>
+#include <unistd.h>
+#include "cppgowcxx.hh"
+
+
+int main(int argc, char** argv)
+{
+    cppgow::registerRoute("/", [](cppgow::ServerRequest const& req) -> cppgow::ServerResponse {
+            std::cerr << req.method << " on " << req.url << " from " << req.client << std::endl;
+            for (auto const& h: req.headers)
+                std::cerr << "  " << h.first << " set to " << h.second << std::endl;
+            std::cerr << "path: " << req.path << std::endl;
+            for (auto const& h: req.query)
+                std::cerr << "  " << h.first << " set to " << h.second << std::endl;
+            cppgow::ServerResponse resp;
+            resp.statusCode = 200;
+            return resp;
+    });
+    cppgow::listenAndServe(":8901");
+    while (true)
+        usleep(1000000);
+}
+```
 ## Anything else I should know?
 
 The API does not support streaming (yet?), so all bodies must fit in memory.
 
 Since the heavy lifting is done by goroutines, your callbacks will be called
 from a random thread.
-
-## Why is it called cppgow?
-
-I'll make a C++ binding on top of the C API eventually.
-
-

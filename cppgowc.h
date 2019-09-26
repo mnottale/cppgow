@@ -27,6 +27,7 @@ struct CServerRequest
   char* client; // ip:port
   void* payload;
   int   payloadLength;
+  void* userData;
 };
 
 struct CServerResponse
