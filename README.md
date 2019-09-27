@@ -112,7 +112,7 @@ If you need to reply asynchronously to a client request, you can now do so using
   - In your handler return a statusCode of 0 and no payload.
   - Copy `request->requestId` to your asynchronous handler.
   - At any time, call `cppgowWriteHeader(requestId, key, val)`, `cppgowWriteStatusCode(requestId, code)` and `cppgowWriteData(requestId, ptr, len)`.
-  - When you are done, call `cppgowWriteData(0, 0)`.
+  - When you are done, call `cppgowWriteData(requestId, 0, 0)`.
 
 ## Anything else I should know?
 
