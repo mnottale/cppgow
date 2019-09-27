@@ -38,6 +38,7 @@ namespace cppgow
         Headers headers;
         std::string client;
         BufferView payload;
+        long requestId;
     };
     struct ServerResponse
     {
@@ -47,6 +48,6 @@ namespace cppgow
     };
     using RouteHandler = std::function<ServerResponse(ServerRequest const&)>;
  
-    void registerRoute(std::string const& path, RouteHandler handler);
+    void registerRoute(std::string const& path, RouteHandler handler, bool asyncRoute = false);
     void listenAndServe(std::string const& hostPort);
 }

@@ -131,6 +131,7 @@ namespace cppgow
         req.client = creq->client;
         req.payload = BufferView(creq->payload, creq->payloadLength);
         req.headers = parseHeaders(creq->headers);
+        req.requestId = creq->requestId;
         parseQuery(req.url, req.path, req.query);
         RouteHandler* handler = (RouteHandler*)creq->userData;
         ServerResponse resp = (*handler)(req);
@@ -142,9 +143,9 @@ namespace cppgow
         return cresp;
     }
 
-    void registerRoute(std::string const& path, RouteHandler handler)
+    void registerRoute(std::string const& path, RouteHandler handler, bool asyncRoute)
     {
-        cppgowRegisterHandler((char*)path.c_str(), onRouteCalled, new RouteHandler(handler));
+        cppgowRegisterHandler((char*)path.c_str(), onRouteCalled, new RouteHandler(handler), asyncRoute? 1:0);
     }
 
     void listenAndServe(std::string const& hostPort)

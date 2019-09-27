@@ -30,6 +30,7 @@ struct CServerRequest
   void* payload;
   int   payloadLength;
   void* userData;
+  long requestId;
 };
 
 struct CServerResponse

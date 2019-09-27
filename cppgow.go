@@ -32,6 +32,7 @@ import "io"
 import "io/ioutil"
 import "net/http"
 import "strings"
+import "sync"
 
 var client *http.Client;
 
@@ -87,10 +88,65 @@ func cppgowSyncRequest(request *C.struct_CRequest) {
   C.invokeRequestCallback(request.onResult, request, C.int(resp.StatusCode), unsafe.Pointer(&body[0]), C.int(len(body)));
 }
 
+type AsyncRequest struct {
+    data []byte
+    headerKey string
+    headerValue string
+    statusCode int
+    finish bool
+}
+
+var (
+   writersMutex *sync.Mutex = &sync.Mutex{}
+   writers map[int]chan AsyncRequest = make(map[int]chan AsyncRequest)
+   nextWriterId int = 0
+)
+
+//export cppgowWriteHeader
+func cppgowWriteHeader(uid C.long, hk *C.char, hv *C.char) {
+    var c chan AsyncRequest
+    writersMutex.Lock()
+    c, ok := writers[int(uid)]
+    writersMutex.Unlock()
+    if !ok {
+        return
+    }
+    c <- AsyncRequest { headerKey: C.GoString(hk), headerValue: C.GoString(hv)}
+}
+
+//export cppgowWriteStatusCode
+func cppgowWriteStatusCode(uid C.long, sc C.int) {
+    var c chan AsyncRequest
+    writersMutex.Lock()
+    c, ok := writers[int(uid)]
+    writersMutex.Unlock()
+    if !ok {
+        return
+    }
+    c <- AsyncRequest { statusCode: int(sc) }
+}
+
+//export cppgowWriteData
+func cppgowWriteData(uid C.long, data unsafe.Pointer, length C.int) {
+    var c chan AsyncRequest
+    writersMutex.Lock()
+    c, ok := writers[int(uid)]
+    writersMutex.Unlock()
+    if !ok {
+        return
+    }
+    if data == nil {
+        c <- AsyncRequest{ finish: true}
+    } else {
+        c <- AsyncRequest{ data: C.GoBytes(data, length)}
+    }
+}
+
 //export cppgowRegisterHandler
-func cppgowRegisterHandler(route *C.char, handler C.ServerCallback, userData unsafe.Pointer) {
+func cppgowRegisterHandler(route *C.char, handler C.ServerCallback, userData unsafe.Pointer, isAsync C.int) {
   http.HandleFunc(C.GoString(route), func(w http.ResponseWriter, r *http.Request) {
-    creq := C.struct_CServerRequest {}
+      flusher, canFlush := w.(http.Flusher)
+      creq := C.struct_CServerRequest {}
       creq.url = C.CString(r.URL.String())
       creq.method = C.CString(r.Method)
       headers := ""
@@ -109,6 +165,17 @@ func cppgowRegisterHandler(route *C.char, handler C.ServerCallback, userData uns
       creq.payload = C.CBytes(body) // we are forced to copy here...
       creq.payloadLength = C.int(len(body))
       creq.userData = userData
+      var c chan AsyncRequest = nil
+      var uid int = 0
+      if isAsync != 0 {
+          writersMutex.Lock()
+          uid = nextWriterId
+          nextWriterId += 1
+          c = make(chan AsyncRequest, 10)
+          writers[uid] = c
+          writersMutex.Unlock()
+      }
+      creq.requestId = C.long(uid)
       csr := C.invokeServerCallback(handler, &creq)
       if csr == nil {
         w.WriteHeader(500)
@@ -129,9 +196,34 @@ func cppgowRegisterHandler(route *C.char, handler C.ServerCallback, userData uns
             }
         }
       }
-      w.WriteHeader(int(csr.statusCode))
-      if csr.payload != nil {
-        w.Write(C.GoBytes(csr.payload, csr.payloadLength))
+      if csr.statusCode != 0 || csr.payload != nil {
+          w.WriteHeader(int(csr.statusCode))
+          if csr.payload != nil {
+              w.Write(C.GoBytes(csr.payload, csr.payloadLength))
+          }
+      }
+      if isAsync != 0 {
+          for {
+              asr := <- c
+              if asr.headerKey != "" {
+                  w.Header().Add(asr.headerKey, asr.headerValue)
+              }
+              if asr.statusCode != 0 {
+                  w.WriteHeader(asr.statusCode)
+              }
+              if asr.data != nil {
+                  w.Write(asr.data)
+                  if canFlush {
+                      flusher.Flush()
+                  }
+              }
+              if asr.finish {
+                  break
+              }
+          }
+          writersMutex.Lock()
+          delete(writers, uid)
+          writersMutex.Unlock()
       }
       // cleanup
       C.free(unsafe.Pointer(creq.url))

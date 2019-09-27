@@ -6,7 +6,7 @@ get: cppgow.so get.c
 	gcc -g -o get -I. get.c ./cppgow.so
 
 testserver: cppgow.so testserver.c
-	gcc -g -o testserver -I. testserver.c ./cppgow.so
+	gcc -pthread -g -o testserver -I. testserver.c ./cppgow.so
 
 testservercxx: cppgowcxx.so testserver.cc
 	g++ -g -o testservercxx -I. testserver.cc ./cppgowcxx.so ./cppgow.so

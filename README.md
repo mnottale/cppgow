@@ -52,7 +52,7 @@ struct CServerResponse* ping(struct CServerRequest* req) {
 
 int main(int argc, char** argv)
 {
-  cppgowRegisterHandler("/ping", ping);
+  cppgowRegisterHandler("/ping", ping, 0, 0);
   cppgowListenAndServe(":8901");
   while(1)
     usleep(1000000);
@@ -103,9 +103,18 @@ int main(int argc, char** argv)
         usleep(1000000);
 }
 ```
-## Anything else I should know?
 
-The API does not support streaming (yet?), so all bodies must fit in memory.
+## Asynchronous route handler
+
+If you need to reply asynchronously to a client request, you can now do so using the asynchronous API:
+
+  - Set the last parameter of `cppgow::registerRoute()`/`cppgowRegisterHandler()` to `true/1`.
+  - In your handler return a statusCode of 0 and no payload.
+  - Copy `request->requestId` to your asynchronous handler.
+  - At any time, call `cppgowWriteHeader(requestId, key, val)`, `cppgowWriteStatusCode(requestId, code)` and `cppgowWriteData(requestId, ptr, len)`.
+  - When you are done, call `cppgowWriteData(0, 0)`.
+
+## Anything else I should know?
 
 Since the heavy lifting is done by goroutines, your callbacks will be called
 from a random thread.
