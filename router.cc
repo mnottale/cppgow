@@ -12,6 +12,7 @@ namespace router
 {
     struct Route
     {
+        std::string method;
         std::string prefix;
         std::string re;
         Handler handler;
@@ -22,6 +23,8 @@ namespace router
         auto const& path = req.path;
         for(auto const& r: routes)
         {
+            if (!r.method.empty() && r.method != req.method)
+                continue;
             if (path.length() >= r.prefix.length() && path.substr(0, r.prefix.length()) == r.prefix)
             {
                 std::regex re(r.re);
@@ -52,7 +55,12 @@ namespace router
     }
     void registerRoute(std::string const& prefix, std::string const& re, Handler handler)
     {
-        Route r{prefix, re, handler};
+        Route r{std::string(), prefix, re, handler};
+        routes.push_back(r);
+    }
+    void registerRoute(std::string const& method, std::string const& prefix, std::string const& re, Handler handler)
+    {
+        Route r{method, prefix, re, handler};
         routes.push_back(r);
     }
     void listenAndServe(std::string const& hostPort)
