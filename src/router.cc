@@ -7,6 +7,7 @@ extern void router_register_routes();
 
 thread_local cppgow::ServerResponse* current_response;
 thread_local cppgow::ServerRequest* current_request;
+thread_local std::vector<std::string>* current_params;
 
 namespace router
 {
@@ -37,6 +38,7 @@ namespace router
                     try
                     {
                         current_request = (cppgow::ServerRequest*) &req;
+                        current_params = &hits;
                         return r.handler(req, hits);
                     }
                     catch (std::exception const& e)
@@ -63,10 +65,10 @@ namespace router
         Route r{method, prefix, re, handler};
         routes.push_back(r);
     }
-    void listenAndServe(std::string const& hostPort)
+    void listenAndServe(std::string const& hostPort, bool asyncMode)
     {
         router_register_routes();
-        cppgow::registerRoute("/", processor);
+        cppgow::registerRoute("/", processor, asyncMode);
         cppgow::listenAndServe(hostPort);
     }
     cppgow::ServerRequest& request()
@@ -76,6 +78,10 @@ namespace router
     cppgow::ServerResponse& response()
     {
         return *current_response;
+    }
+    std::vector<std::string>& requestParams()
+    {
+        return *current_params;
     }
     void setResponse(cppgow::ServerResponse* ptr)
     {
