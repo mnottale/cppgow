@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 package main
 
 
-// #cgo LDFLAGS: -L.. -lcppgow_invoke
+// #cgo LDFLAGS: -L.. -L../../../build -lcppgow_invoke
 // #cgo CFLAGS: -g -I../include
 // #include <stdlib.h>
 // #include "cppgow/cppgowc.h"
@@ -139,6 +139,22 @@ func cppgowWriteData(uid C.long, data unsafe.Pointer, length C.int) {
         c <- AsyncRequest{ finish: true}
     } else {
         c <- AsyncRequest{ data: C.GoBytes(data, length)}
+    }
+}
+
+//export cppgowWriteAndClose
+func cppgowWriteAndClose(uid C.long, statusCode C.int, data *C.char) {
+     var c chan AsyncRequest
+    writersMutex.Lock()
+    c, ok := writers[int(uid)]
+    writersMutex.Unlock()
+    if !ok {
+        return
+    }
+    if data == nil {
+        c <- AsyncRequest{ statusCode: int(statusCode), finish: true}
+    } else {
+        c <- AsyncRequest{ statusCode: int(statusCode), data: []byte(C.GoString(data)), finish: true}
     }
 }
 
