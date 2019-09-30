@@ -1,6 +1,6 @@
 #include <iostream>
 #include <unistd.h>
-#include "cppgowcxx.hh"
+#include "cppgow/cppgowcxx.hh"
 
 
 int main(int argc, char** argv)

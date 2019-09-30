@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cppgow.h"
+#include "cppgow/cppgow.h"
 
 #include <unordered_map>
 #include <string>

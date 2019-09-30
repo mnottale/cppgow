@@ -21,10 +21,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 package main
 
 
-// #cgo LDFLAGS: -L. -lcppgow_invoke
-// #cgo CFLAGS: -g
+// #cgo LDFLAGS: -L.. -lcppgow_invoke
+// #cgo CFLAGS: -g -I../include
 // #include <stdlib.h>
-// #include "cppgowc.h"
+// #include "cppgow/cppgowc.h"
 import "C"
 import "unsafe"
 import "bytes"

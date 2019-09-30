@@ -1,7 +1,7 @@
 #include <string>
 #include <regex>
 
-#include "router.hh"
+#include "cppgow/router.hh"
 
 extern void router_register_routes();
 

@@ -1,4 +1,4 @@
-#include "cppgowcxx.hh"
+#include "cppgow/cppgowcxx.hh"
 
 namespace cppgow
 {

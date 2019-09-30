@@ -76,7 +76,7 @@ def process_file(fname):
     return (gcode, gregis)
 
 (code, regis) = process_file(sys.argv[1])
-print('#include "router.hh"\n')
+print('#include "cppgow/router.hh"\n')
 print(code)
 print('void router_register_routes() {\n')
 print(regis)

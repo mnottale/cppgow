@@ -1,4 +1,4 @@
-#include "cppgowc.h"
+#include "cppgow/cppgowc.h"
 
 void invokeRequestCallback(RequestCallback rc,struct CRequest* req, int code, void* data, int len)
 {

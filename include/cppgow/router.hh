@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iostream> //debug
 
-#include "cppgowcxx.hh"
+#include "cppgow/cppgowcxx.hh"
 
 namespace router
 {
