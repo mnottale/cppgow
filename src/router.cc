@@ -19,6 +19,7 @@ namespace router
         Handler handler;
     };
     static std::vector<Route> routes;
+    static bool isAsync = false;
     static cppgow::ServerResponse processor(cppgow::ServerRequest const& req)
     {
         auto const& path = req.path;
@@ -53,6 +54,8 @@ namespace router
         }
         cppgow::ServerResponse response;
         response.statusCode = 404;
+        if (isAsync)
+            cppgowWriteData(req.requestId, 0, 0);
         return response;
     }
     void registerRoute(std::string const& prefix, std::string const& re, Handler handler)
@@ -67,6 +70,7 @@ namespace router
     }
     void listenAndServe(std::string const& hostPort, bool asyncMode)
     {
+        isAsync = asyncMode;
         router_register_routes();
         cppgow::registerRoute("/", processor, asyncMode);
         cppgow::listenAndServe(hostPort);
