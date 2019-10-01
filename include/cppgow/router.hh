@@ -24,23 +24,26 @@ namespace router
     }
 
     template<typename T>
-    void response(cppgow::ServerResponse& resp, T const& v)
+    void response(cppgow::ServerResponseWriter& resp, T const& v)
     {
-        std::stringstream ss;
-        ss << v;
-        ss.flush();
-        std::string st(ss.str());
-        resp.payload = cppgow::BufferView(strdup(st.c_str()), st.length());
+        if (resp.valid())
+        {
+            std::stringstream ss;
+            ss << v;
+            ss.flush();
+            std::string st(ss.str());
+            resp.close(200, st);
+        }
     }
 
-    using Handler = std::function<cppgow::ServerResponse(cppgow::ServerRequest, std::vector<std::string>)>;
-    void setAsync(bool mode);
+    using Handler = cppgow::RouteHandlerAsync;
+
     void registerRoute(std::string const& prefix, std::string const& re, Handler handler);
     void registerRoute(std::string const& method, std::string const& prefix, std::string const& re, Handler handler);
-    void listenAndServe(std::string const& hostPort, bool asyncRoutes = false);
+    void listenAndServe(std::string const& hostPort);
 
     cppgow::ServerRequest& request();
-    cppgow::ServerResponse& response();
-    std::vector<std::string>& requestParams();
-    void setResponse(cppgow::ServerResponse* ptr);
+    cppgow::ServerResponseWriter responseWriterTake(); //< steal
+    cppgow::ServerResponseWriter& responseWriterAccess(); //< peek
+    void setResponseWriter(cppgow::ServerResponseWriter* ptr);
 }

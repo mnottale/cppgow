@@ -99,7 +99,7 @@ type AsyncRequest struct {
 var (
    writersMutex *sync.Mutex = &sync.Mutex{}
    writers map[int]chan AsyncRequest = make(map[int]chan AsyncRequest)
-   nextWriterId int = 0
+   nextWriterId int = 1
 )
 
 //export cppgowWriteHeader

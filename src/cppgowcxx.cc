@@ -122,7 +122,7 @@ namespace cppgow
             p = pendl+1;
         }
     }
-    static CServerResponse* onRouteCalled(CServerRequest* creq)
+    static CServerResponse* onSyncRouteCalled(CServerRequest* creq)
     {
         ServerRequest req;
         req.method = creq->method;
@@ -143,13 +143,117 @@ namespace cppgow
         return cresp;
     }
 
-    void registerRoute(std::string const& path, RouteHandler handler, bool asyncRoute)
+    static CServerResponse* onAsyncRouteCalled(CServerRequest* creq)
     {
-        cppgowRegisterHandler((char*)path.c_str(), onRouteCalled, new RouteHandler(handler), asyncRoute? 1:0);
+        ServerRequest req;
+        req.method = creq->method;
+        req.url = creq->url;
+        req.host = creq->host;
+        req.client = creq->client;
+        req.payload = BufferView(creq->payload, creq->payloadLength);
+        req.headers = parseHeaders(creq->headers);
+        req.requestId = creq->requestId;
+        parseQuery(req.url, req.path, req.query);
+        RouteHandlerAsync* handler = (RouteHandlerAsync*)creq->userData;
+        ServerResponseWriter srw(req.requestId);
+        (*handler)(req, srw);
+        CServerResponse* cresp = (CServerResponse*)malloc(sizeof(CServerResponse));
+        cresp->statusCode = 0;
+        cresp->payload = 0;
+        cresp->payloadLength = 0;
+        return cresp;
+    }
+
+    void registerRoute(std::string const& path, RouteHandler handler)
+    {
+        cppgowRegisterHandler((char*)path.c_str(), onSyncRouteCalled, new RouteHandler(handler), 0);
+    }
+
+    void registerRoute(std::string const& path, RouteHandlerAsync handler)
+    {
+        cppgowRegisterHandler((char*)path.c_str(), onAsyncRouteCalled, new RouteHandlerAsync(handler), 1);
     }
 
     void listenAndServe(std::string const& hostPort)
     {
         cppgowListenAndServe((char*)hostPort.c_str());
+    }
+
+    ServerResponseWriter::ServerResponseWriter(long rid)
+    : _requestId(rid)
+    , _closed(false)
+    {}
+
+    ServerResponseWriter::ServerResponseWriter(ServerResponseWriter&& b)
+    : _requestId(b._requestId)
+    , _closed(b._closed)
+    {
+        b._requestId = 0;
+    }
+
+    ServerResponseWriter& ServerResponseWriter::operator=(ServerResponseWriter&& b)
+    {
+        _requestId = b._requestId;
+        _closed = b._closed;
+        b._requestId = 0;
+        return *this;
+    }
+
+    void ServerResponseWriter::setStatusCode(int sc)
+    {
+        _checkValidOpen();
+        cppgowWriteStatusCode(_requestId, sc);
+    }
+
+    void ServerResponseWriter::setHeader(std::string const& k, std::string const& v)
+    {
+        _checkValidOpen();
+        cppgowWriteHeader(_requestId, (char*)k.c_str(), (char*)v.c_str());
+    }
+
+    void ServerResponseWriter::write(const void* data, int size)
+    {
+        _checkValidOpen();
+        cppgowWriteData(_requestId, (void*)data, size);
+    }
+
+    void ServerResponseWriter::write(std::string const& data)
+    {
+        write(data.data(), data.size());
+    }
+
+    void ServerResponseWriter::close()
+    {
+        _checkValidOpen();
+        cppgowWriteData(_requestId, 0, 0);
+        _closed = true;
+    }
+
+    void ServerResponseWriter::close(int sc, std::string const& payload)
+    {
+        _checkValidOpen();
+        setStatusCode(sc);
+        if (payload.length() != 0)
+            write(payload);
+        close();
+    }
+
+    void ServerResponseWriter::_checkValidOpen()
+    {
+        if (_requestId == 0)
+            throw std::runtime_error("ServerResponseWriter has no associated request");
+        if (_closed)
+            throw std::runtime_error("ServerResponseWriter is closed");
+    }
+
+    ServerResponseWriter::~ServerResponseWriter()
+    {
+        if (_requestId != 0 && !_closed)
+            close();
+    }
+
+    bool ServerResponseWriter::valid()
+    {
+        return _requestId != 0 && !_closed;
     }
 }

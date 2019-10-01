@@ -36,17 +36,13 @@ def generate_route(route, rtype, fname, fargs):
         route_regex += route[nextp:p]
         sc = p
     #print("REX " + route_regex)
-    code = 'cppgow::ServerResponse serve_' + fname + '(cppgow::ServerRequest req, std::vector<std::string> rematch) {\n'
-    code += '  cppgow::ServerResponse serverResponse;\n'
-    code += '  router::setResponse(&serverResponse);\n'
-    code += '  serverResponse.statusCode = 200;\n'
+    code = 'void serve_' + fname + '(cppgow::ServerRequest req, cppgow::ServerResponseWriter& responseWriter) {\n'
     for a in range(len(route_args)):
-        code += '  req.query["' + route_args[a] + '"] = rematch[' + str(a) + '];\n'
-    code += '  router::response(serverResponse, ' + fname + '('
+        code += '  req.query["' + route_args[a] + '"] = req.parameters[' + str(a) + '];\n'
+    code += '  router::response(responseWriter, ' + fname + '('
     for a in fargs:
         code += 'router::cast<' + a[0] + '>(req.query["' + a[1] + '"]),'
     code = code[:-1] + '));\n'
-    code += '  return serverResponse;\n'
     code += '}\n'
     regis = '  router::registerRoute("' + route_prefix + '", "' + route_regex + '", serve_' + fname + ');\n'
     return (code, regis)

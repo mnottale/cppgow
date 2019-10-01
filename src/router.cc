@@ -1,13 +1,13 @@
 #include <string>
 #include <regex>
+#include <iostream>
 
 #include "cppgow/router.hh"
 
 extern void router_register_routes();
 
-thread_local cppgow::ServerResponse* current_response;
+thread_local cppgow::ServerResponseWriter* current_response;
 thread_local cppgow::ServerRequest* current_request;
-thread_local std::vector<std::string>* current_params;
 
 namespace router
 {
@@ -19,12 +19,13 @@ namespace router
         Handler handler;
     };
     static std::vector<Route> routes;
-    static bool isAsync = false;
-    static cppgow::ServerResponse processor(cppgow::ServerRequest const& req)
+    static void processor(cppgow::ServerRequest const& req, cppgow::ServerResponseWriter& writer)
     {
         auto const& path = req.path;
+        //std::cerr << "REQUEST " << req.method << " " << req.path << std::endl;
         for(auto const& r: routes)
         {
+            //std::cerr << "scan " << r.method << " " << r.prefix << " " << r.re << std::endl;
             if (!r.method.empty() && r.method != req.method)
                 continue;
             if (path.length() >= r.prefix.length() && path.substr(0, r.prefix.length()) == r.prefix)
@@ -39,24 +40,20 @@ namespace router
                     try
                     {
                         current_request = (cppgow::ServerRequest*) &req;
-                        current_params = &hits;
-                        return r.handler(req, hits);
+                        current_response = &writer;
+                        const_cast<cppgow::ServerRequest&>(req).parameters = hits;
+                        r.handler(req, writer);
+                        return;
                     }
                     catch (std::exception const& e)
                     {
-                        cppgow::ServerResponse response;
-                        response.statusCode = 500;
-                        response.payload = cppgow::BufferView(strdup(e.what()), strlen(e.what()));
-                        return response;
+                        writer.close(500, e.what());
+                        return;
                     }
                 }
             }
         }
-        cppgow::ServerResponse response;
-        response.statusCode = 404;
-        if (isAsync)
-            cppgowWriteData(req.requestId, 0, 0);
-        return response;
+        writer.close(404);
     }
     void registerRoute(std::string const& prefix, std::string const& re, Handler handler)
     {
@@ -68,27 +65,26 @@ namespace router
         Route r{method, prefix, re, handler};
         routes.push_back(r);
     }
-    void listenAndServe(std::string const& hostPort, bool asyncMode)
+    void listenAndServe(std::string const& hostPort)
     {
-        isAsync = asyncMode;
         router_register_routes();
-        cppgow::registerRoute("/", processor, asyncMode);
+        cppgow::registerRoute("/", processor);
         cppgow::listenAndServe(hostPort);
     }
     cppgow::ServerRequest& request()
     {
         return *current_request;
     }
-    cppgow::ServerResponse& response()
-    {
-        return *current_response;
-    }
-    std::vector<std::string>& requestParams()
-    {
-        return *current_params;
-    }
-    void setResponse(cppgow::ServerResponse* ptr)
+    void setResponseWriter(cppgow::ServerResponseWriter* ptr)
     {
         current_response = ptr;
+    }
+    cppgow::ServerResponseWriter responseWriterTake()
+    {
+        return std::move(*current_response);
+    }
+    cppgow::ServerResponseWriter& responseWriterAccess()
+    {
+        return *current_response;
     }
 }

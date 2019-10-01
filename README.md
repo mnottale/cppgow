@@ -106,19 +106,24 @@ int main(int argc, char** argv)
 
 ## Asynchronous route handler
 
-If you need to reply asynchronously to a client request, you can now do so using the asynchronous API:
+### In C
 
-  - Set the last parameter of `cppgow::registerRoute()`/`cppgowRegisterHandler()` to `true/1`.
+  - Set the last parameter of `cppgowRegisterHandler()` to `1`.
   - In your handler return a statusCode of 0 and no payload.
   - Copy `request->requestId` to your asynchronous handler.
   - At any time, call `cppgowWriteHeader(requestId, key, val)`, `cppgowWriteStatusCode(requestId, code)` and `cppgowWriteData(requestId, ptr, len)`.
   - When you are done, call `cppgowWriteData(requestId, 0, 0)`.
 
+### In C++
+
+Register a handler with signature `void myHandler(cppgow::ServerRequest const& request, cppgow::ServerResponseWriter& writer)`
+
+The writer is movable but non-copyable. It exposes methods to write the status-code, headers and payload.
+
 ## Anything else I should know?
 
 Since the heavy lifting is done by goroutines, your callbacks will be called
 from a random thread.
-
 
 ## C++ Router
 
@@ -138,7 +143,7 @@ Generate code with `./routegen.py mycppfile.cc > mycppfile_gen.cc`.
 
 Include the generated file in your sources, and call `router::listenAndServe(":portnumber")` from main().
 
-You can access the current request and response objects using `router::request()` and `router::response()`.
+You can access the current request and responseWriter objects using `router::request()` and `router::responseWriterAccess()`.
 
 Things you should know about it:
 

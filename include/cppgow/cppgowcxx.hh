@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <string>
 #include <functional>
+#include <vector>
 
 namespace cppgow
 {
@@ -34,6 +35,7 @@ namespace cppgow
         std::string url;
         std::string path;
         std::string host;
+        std::vector<std::string> parameters; //< filled by router
         Headers query;
         Headers headers;
         std::string client;
@@ -46,8 +48,35 @@ namespace cppgow
         int statusCode;
         BufferView payload;
     };
+    
+    class ServerResponseWriter
+    {
+    public:
+        ServerResponseWriter(long requestId);
+        ~ServerResponseWriter();
+        ServerResponseWriter(ServerResponseWriter const& b) = delete;
+        ServerResponseWriter(ServerResponseWriter && b);
+        ServerResponseWriter& operator = (ServerResponseWriter const& b) = delete;
+        ServerResponseWriter& operator = (ServerResponseWriter&& b);
+
+        void setStatusCode(int sc);
+        void setHeader(std::string const& key, std::string const& value);
+        void write(const void* data, int size);
+        void write(std::string const& data);
+        void close();
+        void close(int sc, std::string const& payload = "");
+        bool valid();
+    private:
+        void _checkValidOpen();
+        long _requestId;
+        bool _closed;
+    };
+
     using RouteHandler = std::function<ServerResponse(ServerRequest const&)>;
- 
-    void registerRoute(std::string const& path, RouteHandler handler, bool asyncRoute = false);
+    using RouteHandlerAsync = std::function<void(ServerRequest const&, ServerResponseWriter&)>; 
+    
+
+    void registerRoute(std::string const& path, RouteHandler handler);
+    void registerRoute(std::string const& path, RouteHandlerAsync handler);
     void listenAndServe(std::string const& hostPort);
 }

@@ -20,14 +20,14 @@ cppgow.so: libcppgow_invoke.a src/cppgow.go include/cppgow/cppgowc.h
 	mv cppgow.h include/cppgow/
 
 cppgowcxx.so: cppgow.so src/cppgowcxx.cc include/cppgow/cppgowcxx.hh
-	g++ -fPIC -o cppgowcxx.so -shared -Iinclude src/cppgowcxx.cc ./cppgow.so
+	g++ -g -fPIC -o cppgowcxx.so -shared -Iinclude src/cppgowcxx.cc ./cppgow.so
 
 
 samples/testrouter_gen.cc: samples/testrouter.cc routegen.py
 	./routegen.py samples/testrouter.cc > samples/testrouter_gen.cc
 
 testrouter: include/cppgow/router.hh src/router.cc samples/testrouter.cc samples/testrouter_gen.cc
-	g++ -o testrouter -Iinclude samples/testrouter.cc src/router.cc ./cppgowcxx.so ./cppgow.so
+	g++ -g -o testrouter -Iinclude samples/testrouter.cc src/router.cc ./cppgowcxx.so ./cppgow.so
 
 clean:
 	rm cppgow.so libcppgow_invoke.a cppgow_invoke.o

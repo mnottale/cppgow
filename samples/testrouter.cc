@@ -13,7 +13,7 @@ int add(int a, int b, int c)
 std::string concat(std::string a, std::string b)
 {
     auto token = router::request().headers["X-Token"];
-    router::response().headers["X-Token"] = token;
+    router::responseWriterAccess().setHeader("X-Token", token);
     return a+b;
 }
 
