@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "cppgow/cppgow.h"
+#include "cppgow/libcppgow.h"
 
 
 

@@ -2,32 +2,32 @@
 
 all: get testserver testservercxx testrouter
 
-get: cppgow.so samples/get.c
-	gcc -g -o get -Iinclude samples/get.c ./cppgow.so
+get: libcppgow.so samples/get.c
+	gcc -g -o get -Iinclude samples/get.c -L. -lcppgow
 
-testserver: cppgow.so samples/testserver.c
-	gcc -pthread -g -o testserver -Iinclude samples/testserver.c ./cppgow.so
+testserver: libcppgow.so samples/testserver.c
+	gcc -pthread -g -o testserver -Iinclude samples/testserver.c -L. -lcppgow
 
-testservercxx: cppgowcxx.so samples/testserver.cc
-	g++ -g -o testservercxx -Iinclude samples/testserver.cc ./cppgowcxx.so ./cppgow.so
+testservercxx: libcppgowcxx.so samples/testserver.cc
+	g++ -g -o testservercxx -Iinclude samples/testserver.cc -L. -lcppgowcxx -lcppgow
 
 libcppgow_invoke.a: src/cppgow_invoke.c
 	gcc -g -Iinclude -c -o cppgow_invoke.o src/cppgow_invoke.c
 	ar cru libcppgow_invoke.a cppgow_invoke.o
 
-cppgow.so: libcppgow_invoke.a src/cppgow.go include/cppgow/cppgowc.h
-	go build -o cppgow.so -buildmode=c-shared src/cppgow.go
-	mv cppgow.h include/cppgow/
+libcppgow.so: libcppgow_invoke.a src/cppgow.go include/cppgow/cppgowc.h
+	go build -o libcppgow.so -buildmode=c-shared src/cppgow.go
+	mv libcppgow.h include/cppgow/
 
-cppgowcxx.so: cppgow.so src/cppgowcxx.cc include/cppgow/cppgowcxx.hh
-	g++ -g -Wall -Wsign-compare -fPIC -o cppgowcxx.so -shared -Iinclude src/cppgowcxx.cc ./cppgow.so
+libcppgowcxx.so: libcppgow.so src/cppgowcxx.cc include/cppgow/cppgowcxx.hh
+	g++ -g -Wall -Wsign-compare -fPIC -o libcppgowcxx.so -shared -Iinclude src/cppgowcxx.cc -L. -lcppgow
 
 
 samples/testrouter_gen.cc: samples/testrouter.cc routegen.py
 	./routegen.py samples/testrouter.cc > samples/testrouter_gen.cc
 
 testrouter: include/cppgow/router.hh src/router.cc samples/testrouter.cc samples/testrouter_gen.cc
-	g++ -Wall -g -o testrouter -Iinclude samples/testrouter.cc src/router.cc ./cppgowcxx.so ./cppgow.so
+	g++ -Wall -g -o testrouter -Iinclude samples/testrouter.cc src/router.cc -L. -lcppgowcxx -lcppgow
 
 clean:
-	rm cppgow.so libcppgow_invoke.a cppgow_invoke.o
+	rm libcppgow.so libcppgowcxx.so libcppgow_invoke.a cppgow_invoke.o

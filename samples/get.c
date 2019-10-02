@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "cppgow/cppgow.h"
+#include "cppgow/libcppgow.h"
 
 
 void onResult(void* req, int sc, void* data, int dataLen)
