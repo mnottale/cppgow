@@ -7,6 +7,8 @@ add_custom_command(
     DEPENDS cppgow_invoke
     COMMAND
         go build -o ${CMAKE_BINARY_DIR}/libcppgow.so -buildmode=c-shared ${CMAKE_CURRENT_SOURCE_DIR}/src/cppgow.go
+    COMMAND
+        mkdir -p ${CMAKE_BINARY_DIR}/cppgow && mv ${CMAKE_BINARY_DIR}/libcppgow.h ${CMAKE_BINARY_DIR}/cppgow/
 )
 
 add_library(cppgowcxx SHARED src/cppgowcxx.cc src/router.cc ${CMAKE_BINARY_DIR}/libcppgow.so)
