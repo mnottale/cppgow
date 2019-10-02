@@ -4,7 +4,6 @@
 
 #include "cppgow/router.hh"
 
-extern void router_register_routes();
 
 thread_local cppgow::ServerResponseWriter* current_response;
 thread_local cppgow::ServerRequest* current_request;
@@ -18,12 +17,16 @@ namespace router
         std::string re;
         Handler handler;
     };
-    static std::vector<Route> routes;
+    static std::vector<Route>& routes()
+    {
+        static std::vector<Route> routes;
+        return routes;
+    }
     static void processor(cppgow::ServerRequest const& req, cppgow::ServerResponseWriter& writer)
     {
         auto const& path = req.path;
         //std::cerr << "REQUEST " << req.method << " " << req.path << std::endl;
-        for(auto const& r: routes)
+        for(auto const& r: routes())
         {
             //std::cerr << "scan " << r.method << " " << r.prefix << " " << r.re << std::endl;
             if (!r.method.empty() && r.method != req.method)
@@ -58,16 +61,15 @@ namespace router
     void registerRoute(std::string const& prefix, std::string const& re, Handler handler)
     {
         Route r{std::string(), prefix, re, handler};
-        routes.push_back(r);
+        routes().push_back(r);
     }
     void registerRoute(std::string const& method, std::string const& prefix, std::string const& re, Handler handler)
     {
         Route r{method, prefix, re, handler};
-        routes.push_back(r);
+        routes().push_back(r);
     }
     void listenAndServe(std::string const& hostPort)
     {
-        router_register_routes();
         cppgow::registerRoute("/", processor);
         cppgow::listenAndServe(hostPort);
     }
