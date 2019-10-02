@@ -68,13 +68,13 @@ namespace cppgow
     static Headers parseHeaders(std::string const& h)
     {
         Headers res;
-        int p = 0;
+        unsigned long p = 0;
         while (p < h.length())
         {
-            int pendl = h.find_first_of('\n', p);
+            auto pendl = h.find_first_of('\n', p);
             if (pendl == h.npos)
                 pendl = h.length();
-            int psep = h.find_first_of(':', p);
+            auto psep = h.find_first_of(':', p);
             res.emplace(h.substr(p, psep-p), h.substr(psep+1, pendl-psep-1));
             p = pendl + 1;
         }
@@ -83,7 +83,7 @@ namespace cppgow
     static std::string urlDecode(std::string const& qq)
     {
         std::string res;
-        for (int p=0; p<qq.length(); ++p)
+        for (unsigned long p=0; p<qq.length(); ++p)
         {
             char c = qq[p];
             if (c == '%' &&  p < qq.length()-2)
@@ -99,7 +99,7 @@ namespace cppgow
     static void parseQuery(std::string const& qq, std::string& outPath, Headers& outQuery)
     {
         std::string q = urlDecode(qq);
-        int sep = q.find_first_of('?');
+        auto sep = q.find_first_of('?');
         if (sep == q.npos)
         {
             outPath = q;
@@ -107,13 +107,13 @@ namespace cppgow
         }
         outPath = q.substr(0, sep);
         q = q.substr(sep+1, std::string::npos);
-        int p = 0;
+        unsigned long p = 0;
         while (p < q.length())
         {
-            int pendl = q.find_first_of('&', p);
+            auto pendl = q.find_first_of('&', p);
             if (pendl == q.npos)
                 pendl = q.length();
-            int psep = q.find_first_of('=', p);
+            auto psep = q.find_first_of('=', p);
             if (psep > pendl)
                 psep = pendl-1;
             std::string pkey = q.substr(p, psep-p);

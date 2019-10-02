@@ -35,7 +35,7 @@ namespace router
                 if (std::regex_match(path, match, re))
                 {
                     std::vector<std::string> hits;
-                    for (int i=1; i<match.size(); ++i)
+                    for (unsigned long i=1; i<match.size(); ++i)
                         hits.push_back(match[i]);
                     try
                     {
