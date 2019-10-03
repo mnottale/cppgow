@@ -90,6 +90,7 @@ namespace cppgow
             {
                 char dgt[3] = {qq[p+1], qq[p+2], 0};
                 res += (char)strtol(dgt, 0, 16);
+                p += 2;
             }
             else
                 res += c;
