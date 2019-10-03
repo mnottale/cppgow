@@ -136,6 +136,7 @@ namespace cppgow
         RouteHandler* handler = (RouteHandler*)creq->userData;
         ServerResponse resp = (*handler)(req);
         CServerResponse* cresp = (CServerResponse*)malloc(sizeof(CServerResponse));
+        memset(cresp, 0, sizeof(CServerResponse));
         cresp->statusCode = resp.statusCode;
         cresp->headers = headersPack(resp.headers);
         cresp->payload = resp.payload.data;
@@ -158,6 +159,7 @@ namespace cppgow
         ServerResponseWriter srw(req.requestId);
         (*handler)(req, srw);
         CServerResponse* cresp = (CServerResponse*)malloc(sizeof(CServerResponse));
+        memset(cresp, 0, sizeof(CServerResponse));
         cresp->statusCode = 0;
         cresp->payload = 0;
         cresp->payloadLength = 0;
