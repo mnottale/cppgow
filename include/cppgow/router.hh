@@ -1,3 +1,7 @@
+/* cppgow, Copyright (C) 2019, Matthieu Nottale
+ * see COPYING file for licensing information
+*/
+
 #pragma once
 
 #include <string>

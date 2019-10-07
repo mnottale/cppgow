@@ -1,3 +1,7 @@
+/* cppgow, Copyright (C) 2019, Matthieu Nottale
+ * see COPYING file for licensing information
+*/
+
 #include <string>
 #include <regex>
 #include <iostream>
