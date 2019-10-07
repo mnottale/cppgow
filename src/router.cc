@@ -14,7 +14,7 @@ namespace router
     {
         std::string method;
         std::string prefix;
-        std::string re;
+        std::regex re;
         Handler handler;
     };
     static std::vector<Route>& routes()
@@ -33,9 +33,8 @@ namespace router
                 continue;
             if (path.length() >= r.prefix.length() && path.substr(0, r.prefix.length()) == r.prefix)
             {
-                std::regex re(r.re);
                 std::smatch match;
-                if (std::regex_match(path, match, re))
+                if (std::regex_match(path, match, r.re))
                 {
                     std::vector<std::string> hits;
                     for (unsigned long i=1; i<match.size(); ++i)
@@ -60,12 +59,12 @@ namespace router
     }
     void registerRoute(std::string const& prefix, std::string const& re, Handler handler)
     {
-        Route r{std::string(), prefix, re, handler};
+        Route r{std::string(), prefix, std::regex(re), handler};
         routes().push_back(r);
     }
     void registerRoute(std::string const& method, std::string const& prefix, std::string const& re, Handler handler)
     {
-        Route r{method, prefix, re, handler};
+        Route r{method, prefix, std::regex(re), handler};
         routes().push_back(r);
     }
     void listenAndServe(std::string const& hostPort)
