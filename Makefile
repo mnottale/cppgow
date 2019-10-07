@@ -12,7 +12,7 @@ testservercxx: libcppgowcxx.so samples/testserver.cc
 	g++ -g -o testservercxx -Iinclude samples/testserver.cc -L. -lcppgowcxx -lcppgow
 
 libcppgow_invoke.a: src/cppgow_invoke.c
-	gcc -g -Iinclude -c -o cppgow_invoke.o src/cppgow_invoke.c
+	gcc -g -O2 -Iinclude -c -o cppgow_invoke.o src/cppgow_invoke.c
 	ar cru libcppgow_invoke.a cppgow_invoke.o
 
 libcppgow.so: libcppgow_invoke.a src/cppgow.go include/cppgow/cppgowc.h
@@ -20,14 +20,14 @@ libcppgow.so: libcppgow_invoke.a src/cppgow.go include/cppgow/cppgowc.h
 	mv libcppgow.h include/cppgow/
 
 libcppgowcxx.so: libcppgow.so src/cppgowcxx.cc include/cppgow/cppgowcxx.hh
-	g++ -g -Wall -Wsign-compare -fPIC -o libcppgowcxx.so -shared -Iinclude src/cppgowcxx.cc -L. -lcppgow
+	g++ -g -O2 -Wall -Wsign-compare -fPIC -o libcppgowcxx.so -shared -Iinclude src/cppgowcxx.cc -L. -lcppgow
 
 
 samples/testrouter_gen.cc: samples/testrouter.cc routegen.py
 	./routegen.py samples/testrouter.cc > samples/testrouter_gen.cc
 
 testrouter: include/cppgow/router.hh src/router.cc samples/testrouter.cc samples/testrouter_gen.cc
-	g++ -Wall -g -o testrouter -Iinclude samples/testrouter.cc src/router.cc -L. -lcppgowcxx -lcppgow
+	g++ -Wall -g -O2 -o testrouter -Iinclude samples/testrouter.cc src/router.cc -L. -lcppgowcxx -lcppgow
 
 clean:
 	rm libcppgow.so libcppgowcxx.so libcppgow_invoke.a cppgow_invoke.o

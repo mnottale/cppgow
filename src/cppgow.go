@@ -22,7 +22,7 @@ package main
 
 
 // #cgo LDFLAGS: -L.. -L../../../build -lcppgow_invoke
-// #cgo CFLAGS: -g -I../include
+// #cgo CFLAGS: -g -O2 -I../include
 // #include <stdlib.h>
 // #include "cppgow/cppgowc.h"
 import "C"
