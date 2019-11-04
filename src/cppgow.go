@@ -7,7 +7,7 @@ See COPYING for licensing information
 package main
 
 
-// #cgo LDFLAGS: -L.. -L../../../build -lcppgow_invoke
+// #cgo LDFLAGS: -L.. -L../build -Lcppgow  -L../../../build -lcppgow_invoke
 // #cgo CFLAGS: -g -O2 -I../include
 // #include <stdlib.h>
 // #include "cppgow/cppgowc.h"
